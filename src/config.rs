@@ -57,6 +57,43 @@ lazy_static::lazy_static! {
     pub static ref ORG: RwLock<String> = RwLock::new("com.carriez".to_owned());
 }
 
+// ORDiDOC : deux variantes issues du meme code, choisies a la compilation par
+// la variable d'environnement ORDIDOC_VARIANT.
+//   (absente)  -> « ORDiDOC Assistance », client complet.
+//   "sos"      -> « SOS ORDiDOC », depannage ponctuel : reception seule, sans
+//                 installation, sans reglages, sans carnet ni compte.
+const ORDIDOC_APP_NAME_FULL: &str = "ORDiDOC Assistance";
+const ORDIDOC_APP_NAME_SOS: &str = "SOS ORDiDOC";
+const ORDIDOC_SOS_HARD_SETTINGS: &[(&str, &str)] = &[
+    ("conn-type", "incoming"),
+    ("disable-installation", "Y"),
+    ("disable-settings", "Y"),
+    ("disable-ab", "Y"),
+    ("disable-account", "Y"),
+];
+
+fn ordidoc_is_sos() -> bool {
+    option_env!("ORDIDOC_VARIANT") == Some("sos")
+}
+
+fn ordidoc_app_name() -> &'static str {
+    if ordidoc_is_sos() {
+        ORDIDOC_APP_NAME_SOS
+    } else {
+        ORDIDOC_APP_NAME_FULL
+    }
+}
+
+fn ordidoc_hard_settings() -> HashMap<String, String> {
+    if !ordidoc_is_sos() {
+        return HashMap::new();
+    }
+    ORDIDOC_SOS_HARD_SETTINGS
+        .iter()
+        .map(|(key, value)| (key.to_string(), value.to_string()))
+        .collect()
+}
+
 type Size = (i32, i32, i32, i32);
 type KeyPair = (Vec<u8>, Vec<u8>);
 
@@ -68,7 +105,7 @@ lazy_static::lazy_static! {
     static ref ONLINE: Mutex<HashMap<String, i64>> = Default::default();
     pub static ref PROD_RENDEZVOUS_SERVER: RwLock<String> = RwLock::new("".to_owned());
     pub static ref EXE_RENDEZVOUS_SERVER: RwLock<String> = Default::default();
-    pub static ref APP_NAME: RwLock<String> = RwLock::new("ORDiDOC Assistance".to_owned());
+    pub static ref APP_NAME: RwLock<String> = RwLock::new(ordidoc_app_name().to_owned());
     static ref KEY_PAIR: Mutex<Option<KeyPair>> = Default::default();
     static ref USER_DEFAULT_CONFIG: RwLock<(UserDefaultConfig, Instant)> = RwLock::new((UserDefaultConfig::load(), Instant::now()));
     pub static ref NEW_STORED_PEER_CONFIG: Mutex<HashSet<String>> = Default::default();
@@ -78,7 +115,7 @@ lazy_static::lazy_static! {
     pub static ref OVERWRITE_DISPLAY_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
     pub static ref DEFAULT_LOCAL_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
     pub static ref OVERWRITE_LOCAL_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
-    pub static ref HARD_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
+    pub static ref HARD_SETTINGS: RwLock<HashMap<String, String>> = RwLock::new(ordidoc_hard_settings());
     pub static ref BUILTIN_SETTINGS: RwLock<HashMap<String, String>> = Default::default();
 }
 
