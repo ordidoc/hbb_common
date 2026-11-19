@@ -59,10 +59,12 @@ lazy_static::lazy_static! {
 
 // ORDiDOC : deux variantes issues du meme code, choisies a la compilation par
 // la variable d'environnement ORDIDOC_VARIANT.
-//   (absente)  -> « ORDiDOC Assistance », client complet.
+//   (absente)  -> « ORDiDOC-Assistance », client complet.
 //   "sos"      -> « SOS ORDiDOC », depannage ponctuel : reception seule, sans
 //                 installation, sans reglages, sans carnet ni compte.
-const ORDIDOC_APP_NAME_FULL: &str = "ORDiDOC Assistance";
+// Sans espace : l'installation refuse tout nom hors lettres, chiffres, tirets
+// et tirets bas (validate_install_app_name).
+const ORDIDOC_APP_NAME_FULL: &str = "ORDiDOC-Assistance";
 const ORDIDOC_APP_NAME_SOS: &str = "SOS ORDiDOC";
 const ORDIDOC_SOS_HARD_SETTINGS: &[(&str, &str)] = &[
     ("conn-type", "incoming"),
