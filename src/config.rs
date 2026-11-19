@@ -59,7 +59,7 @@ lazy_static::lazy_static! {
 
 // ORDiDOC : deux variantes issues du meme code, choisies a la compilation par
 // la variable d'environnement ORDIDOC_VARIANT.
-//   (absente)  -> « ORDiDOC-Assistance », client complet.
+//   (absente)  -> « ORDiDOC-Assistance », client complet, sans carnet ni compte.
 //   "sos"      -> « SOS ORDiDOC », depannage ponctuel : reception seule, sans
 //                 installation, sans reglages, sans carnet ni compte.
 // Sans espace : l'installation refuse tout nom hors lettres, chiffres, tirets
@@ -73,6 +73,10 @@ const ORDIDOC_SOS_HARD_SETTINGS: &[(&str, &str)] = &[
     ("disable-ab", "Y"),
     ("disable-account", "Y"),
 ];
+// Le serveur libre n'a pas de serveur d'API : carnet d'adresses et compte
+// interrogeraient celui, public, de RustDesk.
+const ORDIDOC_FULL_HARD_SETTINGS: &[(&str, &str)] =
+    &[("disable-ab", "Y"), ("disable-account", "Y")];
 
 fn ordidoc_is_sos() -> bool {
     option_env!("ORDIDOC_VARIANT") == Some("sos")
@@ -87,10 +91,12 @@ fn ordidoc_app_name() -> &'static str {
 }
 
 fn ordidoc_hard_settings() -> HashMap<String, String> {
-    if !ordidoc_is_sos() {
-        return HashMap::new();
-    }
-    ORDIDOC_SOS_HARD_SETTINGS
+    let settings = if ordidoc_is_sos() {
+        ORDIDOC_SOS_HARD_SETTINGS
+    } else {
+        ORDIDOC_FULL_HARD_SETTINGS
+    };
+    settings
         .iter()
         .map(|(key, value)| (key.to_string(), value.to_string()))
         .collect()
